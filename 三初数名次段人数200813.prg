@@ -6,6 +6,13 @@
 *	本程序同时计算学科成绩和班级成绩，当前按7年级1-8班，8年级1-4班为智慧班
 *	每次需确定建档数和智慧班
 *	200813，更改默认目录为D:cjfx，无需“总成绩”，直接使用各科成绩求和计算，设置名次线个数，使用分数线mcx数组进行遍历。
+
+
+
+* 										 当前问题：
+*  													可完全运行，但分数线偏低。分数线未对应名次上。
+*													准备，把计数的4个repl循环做成一个模块。
+*
 **********************************************
 set talk off
 clear 
@@ -24,7 +31,7 @@ nj=int(val(substr(考号,3,1))+6)*100 &&获取年级为700，800，900
 creat table bzk(姓名 c(8),考号 c(9),考评班级 c(8), 语文 n(8),语文名次 n(8),数学 n(8),数学名次 n(8), ;
 	英语 n(8),英语名次 n(8),物理 n(8),物理名次 n(8),化学 n(8),化学名次 n(8),道法 n(8),道法名次 n(8), ;
 	历史 n(8),历史名次 n(8),地理 n(8),地理名次 n(8),生物 n(8),生物名次 n(8), ;
-	总成绩 n(8),班级排名 n(8),学校排名 n(8),年级排名 n(8),学校 c(8) ) &&标准库
+	总成绩 n(8),班级排名 n(8),学校排名 n(8),总成绩名次 n(8),学校 c(8) ) &&标准库
 creat table tjk(考评班级 c(8),总分上 n(8),总人数 n(8),总成绩 n(8,2),语文 n(8,2),数学 n(8,2),英语 n(8,2), ;
 	物理 n(8,2),化学 n(8,2),道法 n(8,2),历史 n(8,2),地理 n(8,2),生物 n(8,2),进线 c(8) ) &&统计库
 
@@ -136,6 +143,8 @@ dimension xk(10)
 	xk(8)="地理"
 	xk(9)="生物"
 	xk(10)="总成绩"
+dimension xkmc(10)
+	xkmc=xk+"名次"
 
 **********************************
 *  程序开始
@@ -150,21 +159,14 @@ appe from xx.dbf
 repl all 总成绩 with 语文+数学+英语+物理+化学+道法+历史+地理+生物
 pack
 
-for i = 1 to 10	&&按学科排序
+for i = 1 to 9	&&按学科排序
 	do paixu with xk(1),xk(1)+"名次"
 endfor
-*!*	do paixu with "语文","语文名次"
-*!*	do paixu with "数学","数学名次"
-*!*	do paixu with "英语","英语名次"
-*!*	do paixu with "物理","物理名次"
-*!*	do paixu with "化学","化学名次"
-*!*	do paixu with "道法","道法名次"
-*!*	do paixu with "历史","历史名次"
-*!*	do paixu with "地理","地理名次"
-*!*	do paixu with "生物","生物名次"
+
+
 sort to x1  on 总成绩/d,数学/d,英语/d,语文/d
 use x1
-repl all 年级排名 with recn()
+repl all 总成绩名次 with recn()
 use
 erase xx.dbf
 use  bzk
@@ -199,20 +201,28 @@ for j = 1 to n &&默认两个名次线
 		?'名次'
 		?名次1
 		?'*************正在统计各班进线数,请稍等,不要退出!***************'
-		aver 语文 for 语文名次=名次1 to mc1
-		aver 数学 for 数学名次=名次1 to mc2 
-		aver 英语 for 英语名次=名次1 to mc3 
-		aver 物理 for 物理名次=名次1 to mc4 
-		aver 化学 for 化学名次=名次1 to mc5 
-		aver 道法 for 道法名次=名次1 to mc6
-		aver 历史 for 历史名次=名次1 to mc7
-		aver 地理 for 地理名次=名次1 to mc8
-		aver 生物 for 生物名次=名次1 to mc9
-		aver 总成绩 for   年级排名=名次1 to mc0
+		dimension mc(10) &&名次对应分数线数组
+		for i = 1 to 10
+			average &xk(i) for &xkmc(i)=名次1 to mc(i)
+		endfor  
+*!*			aver 语文 for 语文名次=名次1 to mc1
+*!*			aver 数学 for 数学名次=名次1 to mc2 
+*!*			aver 英语 for 英语名次=名次1 to mc3 
+*!*			aver 物理 for 物理名次=名次1 to mc4 
+*!*			aver 化学 for 化学名次=名次1 to mc5 
+*!*			aver 道法 for 道法名次=名次1 to mc6
+*!*			aver 历史 for 历史名次=名次1 to mc7
+*!*			aver 地理 for 地理名次=名次1 to mc8
+*!*			aver 生物 for 生物名次=名次1 to mc9
+*!*			aver 总成绩 for   总成绩名次=名次1 to mc0
 		  sele tjk
 		      appe blan
-		      repl 语文 with mc1,数学 with mc2,英语 with mc3,总分上 with 名次1,物理 with mc4,化学  with mc5, ;
-		      道法 with mc6,历史 with mc7,地理 with mc8,生物 with mc9,总成绩 with mc0,考评班级 with  '分值'
+		      for i = 1 to 10	&&填充分数线
+		      	replace &xk(i) with mc(i)
+		      endfor
+		      replace 考评班级 with "分值"
+*		      repl 语文 with mc1,数学 with mc2,英语 with mc3,总分上 with 名次1,物理 with mc4,化学  with mc5, ;
+*		      道法 with mc6,历史 with mc7,地理 with mc8,生物 with mc9,总成绩 with mc0,考评班级 with  '分值'
 
 		* 统计各班人数，双进线
 		sele bzk
@@ -225,35 +235,51 @@ for j = 1 to n &&默认两个名次线
 			ibj=substr(str(i),8,3)+space(5) &&将班级由数值变字符
 		    count to x for 考评班级=ibj
 		    *单进
-		    count to gf1 for 语文>=mc1 .and. 考评班级=ibj
-		    count to gf2 for 数学>=mc2 .and. 考评班级=ibj
-		    count to gf3 for 英语>=mc3 .and. 考评班级=ibj
-		    count to gf4 for 物理>=mc4 .and. 考评班级=ibj
-		    count to gf5 for 化学>=mc5 .and. 考评班级=ibj
-		    count to gf6 for 道法>=mc6 .and. 考评班级=ibj
-		    count to gf7 for 历史>=mc7 .and. 考评班级=ibj
-		    count to gf8 for 地理>=mc8 .and. 考评班级=ibj
-		    count to gf9 for 生物>=mc9 .and. 考评班级=ibj
-		    count to gf0 for 总成绩>=mc0 .and. 考评班级=ibj
+		    dimension gf(10)
+		    for k = 1 to 10 
+		    	count to gf(k) for &xk(k)>=mc(k) .and. 考评班级=ibj
+		    endfor
+		    
+		    
+*!*			    count to gf1 for 语文>=mc1 .and. 考评班级=ibj
+*!*			    count to gf2 for 数学>=mc2 .and. 考评班级=ibj
+*!*			    count to gf3 for 英语>=mc3 .and. 考评班级=ibj
+*!*			    count to gf4 for 物理>=mc4 .and. 考评班级=ibj
+*!*			    count to gf5 for 化学>=mc5 .and. 考评班级=ibj
+*!*			    count to gf6 for 道法>=mc6 .and. 考评班级=ibj
+*!*			    count to gf7 for 历史>=mc7 .and. 考评班级=ibj
+*!*			    count to gf8 for 地理>=mc8 .and. 考评班级=ibj
+*!*			    count to gf9 for 生物>=mc9 .and. 考评班级=ibj
+*!*			    count to gf0 for 总成绩>=mc0 .and. 考评班级=ibj
 		    	sele tjk
 			append blank
-			 repl 总人数  with x,语文 with gf1,数学 with gf2,英语 with gf3,总分上 with 名次1,物理 with gf4,化学  with gf5, ;
-			 道法 with gf6,历史 with gf7,地理 with gf8,生物 with gf9,总成绩 with gf0,考评班级 with ibj,进线 with "单进线"
+		    repl 总人数  with x,考评班级 with ibj,总分上 with 名次1,进线 with "单进线"
+		    for k = 1 to 10 
+		    	repl &xk(k) with gf(k)
+		    endfor			
+		
 		    *双进
 		    sele bzk
-			count to gf1 for 语文>=mc1 .and. 考评班级=ibj .and. 总成绩 >=mc0
-		    count to gf2 for 数学>=mc2 .and. 考评班级=ibj .and. 总成绩 >=mc0
-		    count to gf3 for 英语>=mc3 .and. 考评班级=ibj .and. 总成绩 >=mc0
-		    count to gf4 for 物理>=mc4 .and. 考评班级=ibj .and. 总成绩 >=mc0
-		    count to gf5 for 化学>=mc5 .and. 考评班级=ibj .and. 总成绩 >=mc0
-		    count to gf6 for 道法>=mc6 .and. 考评班级=ibj .and. 总成绩 >=mc0
-		    count to gf7 for 历史>=mc7 .and. 考评班级=ibj .and. 总成绩 >=mc0
-		    count to gf8 for 地理>=mc8 .and. 考评班级=ibj .and. 总成绩 >=mc0
-		    count to gf9 for 生物>=mc9 .and. 考评班级=ibj .and. 总成绩 >=mc0
+		    for k = 1 to 9 
+		    	count to gf(k) for &xk(k)>=mc(k) .and. 考评班级=ibj .and. &xk(10)>=mc(10)
+		    endfor
+		    		    
+*!*			    
+*!*				count to gf1 for 语文>=mc1 .and. 考评班级=ibj .and. 总成绩 >=mc0
+*!*			    count to gf2 for 数学>=mc2 .and. 考评班级=ibj .and. 总成绩 >=mc0
+*!*			    count to gf3 for 英语>=mc3 .and. 考评班级=ibj .and. 总成绩 >=mc0
+*!*			    count to gf4 for 物理>=mc4 .and. 考评班级=ibj .and. 总成绩 >=mc0
+*!*			    count to gf5 for 化学>=mc5 .and. 考评班级=ibj .and. 总成绩 >=mc0
+*!*			    count to gf6 for 道法>=mc6 .and. 考评班级=ibj .and. 总成绩 >=mc0
+*!*			    count to gf7 for 历史>=mc7 .and. 考评班级=ibj .and. 总成绩 >=mc0
+*!*			    count to gf8 for 地理>=mc8 .and. 考评班级=ibj .and. 总成绩 >=mc0
+*!*			    count to gf9 for 生物>=mc9 .and. 考评班级=ibj .and. 总成绩 >=mc0
 			sele tjk
 			append blank
-			 repl 总人数  with x,语文 with gf1,数学 with gf2,英语 with gf3,总分上 with 名次1,物理 with gf4,化学  with gf5, ;
-			 道法 with gf6,历史 with gf7,地理 with gf8,生物 with gf9,总成绩 with gf0,考评班级 with ibj,进线 with "双进线"
+			 repl 总人数  with x,考评班级 with ibj,总分上 with 名次1,进线 with "双进线"
+			for k = 1 to 10 
+		    	repl &xk(k) with gf(k)
+		    endfor		
 			?? ibj
 		endfor
 
@@ -262,36 +288,51 @@ for j = 1 to n &&默认两个名次线
 		go top
 		    count all to x 
 		    *单进
-		    count to gf1 for 语文>=mc1 .and. len(alltrim(考评班级))=3
-		    count to gf2 for 数学>=mc2 .and. len(alltrim(考评班级))=3
-		    count to gf3 for 英语>=mc3 .and. len(alltrim(考评班级))=3
-		    count to gf4 for 物理>=mc4 .and. len(alltrim(考评班级))=3
-		    count to gf5 for 化学>=mc5 .and. len(alltrim(考评班级))=3
-		    count to gf6 for 道法>=mc6 .and. len(alltrim(考评班级))=3
-		    count to gf7 for 历史>=mc7 .and. len(alltrim(考评班级))=3
-		    count to gf8 for 地理>=mc8 .and. len(alltrim(考评班级))=3
-		    count to gf9 for 生物>=mc9 .and. len(alltrim(考评班级))=3
-		    count to gf0 for 总成绩>=mc0 .and. len(alltrim(考评班级))=3
+		    for k = 1 to 10 
+		    	count to gf(k) for &xk(k)>=mc(k) .and. len(alltrim(考评班级))=3
+		    endfor
+		    		    
+		    
+*!*			    
+*!*			    count to gf1 for 语文>=mc1 .and. len(alltrim(考评班级))=3
+*!*			    count to gf2 for 数学>=mc2 .and. len(alltrim(考评班级))=3
+*!*			    count to gf3 for 英语>=mc3 .and. len(alltrim(考评班级))=3
+*!*			    count to gf4 for 物理>=mc4 .and. len(alltrim(考评班级))=3
+*!*			    count to gf5 for 化学>=mc5 .and. len(alltrim(考评班级))=3
+*!*			    count to gf6 for 道法>=mc6 .and. len(alltrim(考评班级))=3
+*!*			    count to gf7 for 历史>=mc7 .and. len(alltrim(考评班级))=3
+*!*			    count to gf8 for 地理>=mc8 .and. len(alltrim(考评班级))=3
+*!*			    count to gf9 for 生物>=mc9 .and. len(alltrim(考评班级))=3
+*!*			    count to gf0 for 总成绩>=mc0 .and. len(alltrim(考评班级))=3
 			sele tjk
 			append blank
-			 repl 总人数  with x,语文 with gf1,数学 with gf2,英语 with gf3,总分上 with 名次1,物理 with gf4,化学  with gf5, ;
-			 道法 with gf6,历史 with gf7,地理 with gf8,生物 with gf9,总成绩 with gf0,考评班级 with '全校',进线 with "单进线"
-			
+			 repl 总人数  with x,总分上 with 名次1,考评班级 with '全校',进线 with "单进线"
+			for k = 1 to 10 
+		    	repl &xk(k) with gf(k)
+		    endfor	
 			    *双进
 			    sele bzk
-		    count to gf1 for 语文>=mc1 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
-		    count to gf2 for 数学>=mc2 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
-		    count to gf3 for 英语>=mc3 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
-		    count to gf4 for 物理>=mc4 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
-		    count to gf5 for 化学>=mc5 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
-		    count to gf6 for 道法>=mc6 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
-		    count to gf7 for 历史>=mc7 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
-		    count to gf8 for 地理>=mc8 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
-		    count to gf9 for 生物>=mc9 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
+		    for k = 1 to 9 
+		    	count to gf(k) for &xk(k)>=mc(k) .and. &xk(10)>=mc(10) .and. len(alltrim(考评班级))=3
+		    endfor
+*!*		    
+*!*				    
+*!*				    
+*!*			    count to gf1 for 语文>=mc1 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
+*!*			    count to gf2 for 数学>=mc2 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
+*!*			    count to gf3 for 英语>=mc3 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
+*!*			    count to gf4 for 物理>=mc4 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
+*!*			    count to gf5 for 化学>=mc5 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
+*!*			    count to gf6 for 道法>=mc6 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
+*!*			    count to gf7 for 历史>=mc7 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
+*!*			    count to gf8 for 地理>=mc8 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
+*!*			    count to gf9 for 生物>=mc9 .and. 总成绩 >=mc0 .and. len(alltrim(考评班级))=3
 			sele tjk
 			append blank
-			 repl 总人数  with x,语文 with gf1,数学 with gf2,英语 with gf3,总分上 with 名次1,物理 with gf4,化学  with gf5, ;
-			 道法 with gf6,历史 with gf7,地理 with gf8,生物 with gf9,总成绩 with gf0,考评班级 with '全校',进线 with "双进线"
+			 repl 总人数  with x,总分上 with 名次1,考评班级 with '全校',进线 with "双进线"
+			for k = 1 to 10 
+		    	repl &xk(k) with gf(k)
+		    endfor	
 			? '本名次段进线人数统计完成'
 
 
@@ -322,20 +363,22 @@ do while .not.eof() &&遍历pjtjk
 		do paixu with "生物","生物名次"
 		do paixu with "总成绩","班级排名"
 		kprs=pjtjk.考评人数
-		sum 语文 for 语文名次<=kprs to mc1
-		sum 数学 for 数学名次<=kprs to mc2 
-		sum 英语 for 英语名次<=kprs to mc3 
-		sum 物理 for 物理名次<=kprs to mc4 
-		sum 化学 for 化学名次<=kprs to mc5 
-		sum 道法 for 道法名次<=kprs to mc6
-		sum 历史 for 历史名次<=kprs to mc7
-		sum 地理 for 地理名次<=kprs to mc8
-		sum 生物 for 生物名次<=kprs to mc9
-		sum 总成绩 for 班级排名<=kprs  to mc0
+		sum 语文 for 语文名次<=kprs to mc(1)
+		sum 数学 for 数学名次<=kprs to mc(2)
+		sum 英语 for 英语名次<=kprs to mc(3)
+		sum 物理 for 物理名次<=kprs to mc(4)
+		sum 化学 for 化学名次<=kprs to mc(5)
+		sum 道法 for 道法名次<=kprs to mc(6)
+		sum 历史 for 历史名次<=kprs to mc(7)
+		sum 地理 for 地理名次<=kprs to mc(8)
+		sum 生物 for 生物名次<=kprs to mc(9)
+		sum 总成绩 for 班级排名<=kprs  to mc(10)
 	sele tjk
       appe blan
-      repl 语文 with mc1/kprs ,数学 with mc2/kprs ,英语 with mc3/kprs ,物理 with mc4/kprs ,化学  with mc5/kprs , 总人数 with kprs,;
-      道法 with mc6/kprs ,历史 with mc7/kprs ,地理 with mc8/kprs ,生物 with mc9/kprs ,总成绩 with mc0/kprs ,考评班级 with  pjtjk.考评班级,进线 with '平均分'
+      repl 总人数 with kprs ,考评班级 with  pjtjk.考评班级,进线 with '平均分'
+      for i = 1 to 10
+      	replace &xk(i) with mc(i)/kprs
+      endfor
 		?? 考评班级
 		
 	sele pjtjk
