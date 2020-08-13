@@ -123,22 +123,6 @@ creat table bjfx(考评班级 c(8),第1 n(8),前10 n(8),前20 n(8),前1000 n(8),前4500 n
 	奖10 n(8),奖45 n(8),名次10 n(8),名次45 n(8),名次平均 n(8),名次和 n(10 ,6),排名 n(8),赋分 n(8,2) ) &&班级分析库
 	append from pjtjk fields 考评班级		
 
-***********
-* 学科数组
-dimension xk(10)
-	xk(1)="语文"
-	xk(2)="数学"
-	xk(3)="英语"
-	xk(4)="物理"
-	xk(5)="化学"
-	xk(6)="道法"
-	xk(7)="历史"
-	xk(8)="地理"
-	xk(9)="生物"
-	xk(10)="总成绩"
-
-**********************************
-*  程序开始
 sele 1
 erase xx.dbf
 erase x1.dbf
@@ -149,19 +133,15 @@ pack
 appe from xx.dbf
 repl all 总成绩 with 语文+数学+英语+物理+化学+道法+历史+地理+生物
 pack
-
-for i = 1 to 10	&&按学科排序
-	do paixu with xk(1),xk(1)+"名次"
-endfor
-*!*	do paixu with "语文","语文名次"
-*!*	do paixu with "数学","数学名次"
-*!*	do paixu with "英语","英语名次"
-*!*	do paixu with "物理","物理名次"
-*!*	do paixu with "化学","化学名次"
-*!*	do paixu with "道法","道法名次"
-*!*	do paixu with "历史","历史名次"
-*!*	do paixu with "地理","地理名次"
-*!*	do paixu with "生物","生物名次"
+do paixu with "语文","语文名次"
+do paixu with "数学","数学名次"
+do paixu with "英语","英语名次"
+do paixu with "物理","物理名次"
+do paixu with "化学","化学名次"
+do paixu with "道法","道法名次"
+do paixu with "历史","历史名次"
+do paixu with "地理","地理名次"
+do paixu with "生物","生物名次"
 sort to x1  on 总成绩/d,数学/d,英语/d,语文/d
 use x1
 repl all 年级排名 with recn()
