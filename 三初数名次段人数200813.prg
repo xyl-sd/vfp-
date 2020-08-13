@@ -144,8 +144,9 @@ dimension xk(10)
 	xk(9)="生物"
 	xk(10)="总成绩"
 dimension xkmc(10)
-	xkmc=xk+"名次"
-
+	for i = 1 to 10
+		xkmc(i)=xk(i)+"名次"
+	endfor
 **********************************
 *  程序开始
 sele 1
@@ -160,7 +161,7 @@ repl all 总成绩 with 语文+数学+英语+物理+化学+道法+历史+地理+生物
 pack
 
 for i = 1 to 9	&&按学科排序
-	do paixu with xk(1),xk(1)+"名次"
+	do paixu with xk(i),xk(i)+"名次"
 endfor
 
 
@@ -220,7 +221,7 @@ for j = 1 to n &&默认两个名次线
 		      for i = 1 to 10	&&填充分数线
 		      	replace &xk(i) with mc(i)
 		      endfor
-		      replace 考评班级 with "分值"
+		      replace 总分上 with 名次1,考评班级 with "分值"
 *		      repl 语文 with mc1,数学 with mc2,英语 with mc3,总分上 with 名次1,物理 with mc4,化学  with mc5, ;
 *		      道法 with mc6,历史 with mc7,地理 with mc8,生物 with mc9,总成绩 with mc0,考评班级 with  '分值'
 
